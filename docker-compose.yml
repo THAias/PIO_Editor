@@ -1,0 +1,75 @@
+services:
+  frontend:
+    container_name: frontend
+    image: registry.informatik.tha.de/care_regio/pio_editor_frontend:local
+    ports:
+      - "3000"
+    depends_on:
+      - backend
+    networks:
+      - pioeditor
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3000" ]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  backend:
+    container_name: backend
+    image: registry.informatik.tha.de/care_regio/pio_editor_backend:latest
+    stop_signal: SIGTERM
+    ports: 
+      - "7654"
+    networks:
+      - pioeditor
+      - db
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://frontend/api/getVersion", "|", "jq", "-e", ".success"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+
+  validator:
+    image: registry.informatik.tha.de/care_regio/pio_validator:latest
+    container_name: validator
+    restart: always
+    networks:
+      - pioeditor
+    environment:
+      - "ASPNETCORE_HTTP_PORTS=5212"
+    ports:
+      - "5212"
+
+  reverse_proxy:
+    container_name: nginx
+    image: nginx:stable-alpine-slim
+    restart: always
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - pioeditor  
+
+  db:
+    container_name: db
+    image: mongo:7.0.2
+    command: mongod --quiet --logpath /dev/null
+    volumes:
+    - ./db:/db
+    networks:
+    - db
+    healthcheck:
+      test: echo 'db.stats().ok' | mongosh localhost:27017/test --quiet
+      interval: 10s
+      timeout: 10s
+      retries: 5
+
+networks:
+  pioeditor:
+    driver: bridge
+  db:
+
