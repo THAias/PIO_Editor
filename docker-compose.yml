@@ -1,7 +1,7 @@
 services:
   frontend:
     container_name: frontend
-    image: registry.informatik.tha.de/care_regio/pio_editor_frontend:local
+    image: ghcr.io/thaias/pio_editor_frontend:localVersion
     ports:
       - "3000"
     depends_on:
@@ -16,7 +16,7 @@ services:
 
   backend:
     container_name: backend
-    image: registry.informatik.tha.de/care_regio/pio_editor_backend:latest
+    image: ghcr.io/thaias/pio_editor_backend:localVersion
     stop_signal: SIGTERM
     ports: 
       - "7654"
@@ -30,7 +30,7 @@ services:
       retries: 3
 
   validator:
-    image: registry.informatik.tha.de/care_regio/pio_validator:latest
+    image: ghcr.io/thaias/pio_editor_validator:latest
     container_name: validator
     restart: always
     networks:
